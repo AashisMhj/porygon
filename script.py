@@ -1,22 +1,14 @@
 import requests
 import time
 import csv
+import os
 
-SERVER_URL = "http://localhost:5000"
-ENDPOINTS = [
-    { "path": "/fibonacci", "query_param": "?n=value"},
-    { "path": "/intensive-cpu", "query_param": "?iterations=value"},
-    { "path": "/info"},
-    { "path": "/large-data", "query_param": "?size=value"},
-    { "path": "/file-write", "query_param": "?size=value"},
-    { "path": "/file-read"},
-    { "path": "/stream"},
-]
 
+SERVER_URL = os.environ['REQUEST_HOST']
 RESULT_FILE = "performance_results.csv"
 
-def test_endpoint(endpoint, params=""):
-    url = f"{SERVER_URL}{endpoint}{params}"
+def test_endpoint(endpoint, index):
+    url = f"{SERVER_URL}{endpoint.replace("value", f"{index}")}"
     start_time = time.time()
 
     try:
@@ -27,7 +19,7 @@ def test_endpoint(endpoint, params=""):
 
         return {
             "endpoint": endpoint,
-            "params": params,
+            "index": index,
             "status_code": status_code,
             "response_time": response_time,
             "response_length": response_length
@@ -46,19 +38,15 @@ def run_tests():
     results = []
 
 
-    for endpoint in ENDPOINTS:
-        for i in range(2000):
-            key = 'query_param'
-            param = endpoint.get(key).replace('value', f"{i}") if key in endpoint else endpoint.get(key)
-            result = test_endpoint(endpoint.get('path'), param)
-            results.append(result)
-    
     with open(RESULT_FILE, mode="w", newline="") as file:
         writer = csv.DictWriter(file, fieldnames=results[0].keys())
         writer.writeheader()
         writer.writerows(results)
+        while True:
+            result = test_endpoint(endpoint.get('path'))
+            results.append(result)
+    
 
-    print(f"Results saved to {RESULT_FILE}")
 
 if __name__ == "__main__":
     run_tests()

@@ -1,0 +1,37 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: porygon-workflow
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: workflow
+          image: bitnami/kubectl
+          command:
+            - /bin/sh
+            - '-c'
+            - |
+              # Get URLs from ConfigMap
+              URL_LIST=$(kubectl get configmap load-test-config -o=jsonpath='{.data.urls}')
+              IFS=$'\n' read -rd '' -a URLs <<< "$URL_LIST"
+
+              for URL in "${URLs[@]}"; do
+                echo "Testing with URL: $URL"
+
+                # Update the deployment with a new URL
+                kubectl patch deployment load-tester --type='json' -p="[{'op': 'replace', 'path': '/spec/template/spec/containers/0/args', 'value': [\"$URL\"]}]"
+
+                # Scale to 3 pods
+                kubectl scale deployment load-tester --replicas=3
+                sleep 300  # Wait for 5 minutes
+
+                # Scale back to 1 pod
+                kubectl scale deployment load-tester --replicas=1
+                sleep 300  # Wait for 5 minutes
+              done
+
+              # Stop when all URLs are tested
+              echo "All URLs tested. Stopping workflow."
+              kubectl delete job load-test-workflow
