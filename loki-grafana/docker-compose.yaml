@@ -6,8 +6,11 @@ services:
     container_name: loki
     ports:
       - "3100:3100"
+    networks:
+      - loki-grafana
     volumes:
       - ./loki-config.yaml:/etc/loki/config.yaml
+      # - /home/aashis/docker-volumes/loki:/loki
     command: -config.file=/etc/loki/config.yaml
 
   grafana:
@@ -20,3 +23,9 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     depends_on:
       - loki
+    networks:
+      - loki-grafana
+
+networks:
+  loki-grafana:
+    driver: bridge
