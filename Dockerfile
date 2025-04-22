@@ -1,4 +1,7 @@
 FROM python:3.9
 WORKDIR /app
-COPY script.py .
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+
 CMD ["python", "script.py"]

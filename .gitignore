@@ -1,3 +1,5 @@
 .env
 __pycache__
 .venv
+./loki-grafana/grafana-data/
+./loki-grafana/loki/

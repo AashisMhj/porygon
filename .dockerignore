@@ -1,0 +1,9 @@
+__pycache__
+.venv
+.vscode
+dev-files
+kubernetes
+loki-grafana
+.env.example
+.gitignore
+README.md

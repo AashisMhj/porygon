@@ -63,4 +63,7 @@ docker run -d --name=loki -p 3100:3100 -v "$(pwd)/loki-config.yaml":/etc/loki/co
 # Run Grafana
 docker run -d --name=grafana -p 3000:3000 --link=loki  grafana/grafana-oss:latest
 
+# change permission for docker volumes
+sudo chown -R 10001:10001 ./loki
+sudo chown -R 472:472 ./grafana-data/
 ```

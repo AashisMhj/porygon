@@ -5,18 +5,32 @@ import os
 import json
 import time
 import argparse
+import threading
+import queue
 from dotenv import load_dotenv
-from datetime import datetime, timezone
 from urls import endpoint_urls
 
 load_dotenv()
 
 parser = argparse.ArgumentParser(description="Script to collect metric of url response")
-parser.add_argument("--url_index", help="The index of the url")
-now = datetime.now(timezone.utc)
-
-today_date = datetime.now().strftime('%Y-%m-%d')
+parser.add_argument("--url-index", help="The index of the url")
 LOKI_URL = os.environ.get('LOKI_URL')
+LOG_BUFFER_TIME = 5
+
+log_queue = queue.Queue()
+
+def log_worker():
+    while True:
+        time.sleep(LOG_BUFFER_TIME)
+        entries = []
+        while not log_queue.empty():
+            entry, labels = log_queue.get()
+            entries.append(entry)
+
+        if entries:
+            send_log_to_loki(entry, labels)
+
+threading.Thread(target=log_worker, daemon=True).start()
 
 def send_log_to_loki(entries, labels=None):
     if labels is None:
@@ -66,9 +80,10 @@ def hit_url(url_obj, value=None):
             labels = {
                 "server": "gin-server"
             }
-            send_log_to_loki(data, labels)
+            log_queue.put((data, labels))
     except Exception as e:
         send_log_to_loki(str(e), {"type": "error"})
+        log_queue.put((str(e), {"type": "error"}))
         error_message = f"[ERROR] {i} {type(e).__name__}: {str(e)}"
         print(error_message, url_obj['url'])
 
@@ -79,13 +94,16 @@ if __name__ == "__main__":
         url_index = int(args.url_index)
         if url_index > len(endpoint_urls) -1:
             exit
+        print(f"Starting url: {endpoint_urls[url_index]}")
         while True:
             hit_url(endpoint_urls[url_index])
+            time.sleep(1)
 
     else:
         for url in endpoint_urls:
             print(f"Starting url: {url['url']}")
             for i in range(10000):
                 hit_url(url, f"{i}")
+                time.sleep(1)
             
     
