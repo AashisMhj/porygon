@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: porygon-job
+spec:
+  activeDeadlineSeconds: 1800
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: step
+          image: porygon:latest
+          imagePullPolicy: Never  # ← IMPORTANT!
+          command: ["python", "script.py"]
+          args: ["--url-index", "1"]
+          env:
+            - name: SERVER_URL
+              value: 'http://localhost:5000'
+            - name: LOKI_URL
+              value: 'http://localhost:3100'

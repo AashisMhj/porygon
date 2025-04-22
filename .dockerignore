@@ -5,5 +5,6 @@ dev-files
 kubernetes
 loki-grafana
 .env.example
+.env
 .gitignore
 README.md
