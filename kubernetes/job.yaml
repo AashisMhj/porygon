@@ -9,7 +9,7 @@ spec:
     spec:
       containers:
       - name: porygon
-        image: porygon:latest
+        image: aashismhj/porygon:latest
         imagePullPolicy: Never
         command: ["python", "/app/script.py"]
         args: ["--url-index", "{{URL_INDEX}}"]
