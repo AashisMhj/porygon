@@ -44,12 +44,11 @@ for job in "${jobs[@]}"; do
   # Replace placeholders and apply the job
   cat job.yaml \
     | sed "s/{{URL_INDEX}}/$URL_INDEX/g" \
-    | sed "s/{{PARALLELISM}}/$PARALLELISM/g" \ 
-    | kubectl apply -f -
+    | sed "s/{{PARALLELISM}}/$PARALLELISM/g" | kubectl apply -f -
 
   # Wait 10 seconds
   echo "Waiting 5 minutes..."
-  # sleep 300
+  sleep 300
 
   # Delete the job
   echo "Deleting job..."
