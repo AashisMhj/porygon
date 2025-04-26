@@ -4,7 +4,7 @@ metadata:
   name: porygon-request-job
 spec:
   activeDeadlineSeconds: 600
-  parallelism: 1
+  parallelism: {{PARALLELISM}}
   template:
     spec:
       containers:
@@ -12,7 +12,7 @@ spec:
         image: porygon:latest
         imagePullPolicy: Never
         command: ["python", "/app/script.py"]
-        args: ["--url-index", "0"]
+        args: ["--url-index", "{{URL_INDEX}}"]
         envFrom:
         - configMapRef:
             name: shared-env-vars

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define your job settings as an array of "url_index parallelism"
-joba=(
+job=(
   "1 0"
   "3 0"
   "5 0"
@@ -32,10 +32,6 @@ joba=(
   "7 6"
 )
 
-jobs=(
-  "1 0"
-)
-
 # Loop through each job config
 for job in "${jobs[@]}"; do
   # Split into URL_INDEX and PARALLELISM
@@ -48,12 +44,12 @@ for job in "${jobs[@]}"; do
   # Replace placeholders and apply the job
   cat job.yaml \
     | sed "s/{{URL_INDEX}}/$URL_INDEX/g" \
-    | sed "s/{{PARALLELISM}}/$PARALLELISM/g" \
+    | sed "s/{{PARALLELISM}}/$PARALLELISM/g" \ 
     | kubectl apply -f -
 
   # Wait 10 seconds
   echo "Waiting 5 minutes..."
-  sleep 300
+  # sleep 300
 
   # Delete the job
   echo "Deleting job..."
