@@ -89,12 +89,16 @@ def hit_url(url_obj, value=None):
 
 if __name__ == "__main__":
     args = parser.parse_args()
+    print(args.url_index)
+    while True:
+        pass
+    args = parser.parse_args()
 
     if (args.url_index):
         url_index = int(args.url_index)
         if url_index > len(endpoint_urls) -1:
             exit
-        print(f"Starting url: {endpoint_urls[url_index]}")
+        print(f"Starting url: {endpoint_urls[url_index]} {url_index}")
         while True:
             hit_url(endpoint_urls[url_index])
             time.sleep(1)
