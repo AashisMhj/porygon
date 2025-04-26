@@ -15,6 +15,7 @@ load_dotenv()
 parser = argparse.ArgumentParser(description="Script to collect metric of url response")
 parser.add_argument("--url-index", help="The index of the url")
 LOKI_URL = os.environ.get('LOKI_URL')
+SERVER_LABEL = os.environ.get('SERVER_URL')
 LOG_BUFFER_TIME = 5
 
 log_queue = queue.Queue()
@@ -78,20 +79,15 @@ def hit_url(url_obj, value=None):
                 "content_size": content_size
             }
             labels = {
-                "server": "gin-server"
+                "server": SERVER_LABEL
             }
             log_queue.put((data, labels))
     except Exception as e:
-        send_log_to_loki(str(e), {"type": "error"})
-        log_queue.put((str(e), {"type": "error"}))
+        log_queue.put((str(e), {"type": f"{SERVER_LABEL}-error"}))
         error_message = f"[ERROR] {i} {type(e).__name__}: {str(e)}"
         print(error_message, url_obj['url'])
 
 if __name__ == "__main__":
-    args = parser.parse_args()
-    print(args.url_index)
-    while True:
-        pass
     args = parser.parse_args()
 
     if (args.url_index):

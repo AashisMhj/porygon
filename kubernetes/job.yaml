@@ -1,18 +1,20 @@
 apiVersion: batch/v1
 kind: Job
 metadata: 
-  name: porygon-job
+  name: porygon-request-job
 spec:
-  activeDeadlineSeconds: 300
+  activeDeadlineSeconds: 600
+  parallelism: 1
   template:
     spec:
-      container:
+      containers:
       - name: porygon
         image: porygon:latest
+        imagePullPolicy: Never
         command: ["python", "/app/script.py"]
+        args: ["--url-index", "0"]
         envFrom:
         - configMapRef:
             name: shared-env-vars
-        restartPolicy: Never
-    
+      restartPolicy: Never
 ---

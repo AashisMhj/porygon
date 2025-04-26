@@ -1,1 +1,0 @@
-- Should the Application be single script or multiple script. If using single script how will i manage the which url to send request to. How will the newly created pods know which url to use. If using multiple script, how will i manage creating multiple pods, and how will i know which script to run

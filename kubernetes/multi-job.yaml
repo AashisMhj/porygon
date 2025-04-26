@@ -1,0 +1,120 @@
+# Level 1 1
+apiVersion: batch/v1
+kind: Job
+metadata: 
+  name: porygon-job-1-1
+spec:
+  activeDeadlineSeconds: 600
+  template:
+    spec:
+      container:
+      - name: porygon
+        image: porygon:latest
+        command: ["python", "/app/script.py"]
+        args: ["--url-index", "0"]
+        envFrom:
+        - configMapRef:
+            name: shared-env-vars
+        restartPolicy: Never
+---
+# Level 1 2
+apiVersion: batch/v1
+kind: Job
+metadata: 
+  name: porygon-job-1-2
+spec:
+  activeDeadlineSeconds: 600
+  parallelism: 3
+  template:
+    spec:
+      container:
+      - name: porygon
+        image: porygon:latest
+        command: ["sh", "-c", "sleep 600 && python /app/script.py --url-index 0"]
+        envFrom:
+        - configMapRef:
+            name: shared-env-vars
+        restartPolicy: Never
+---
+# Level 1 3
+apiVersion: batch/v1
+kind: Job
+metadata: 
+  name: porygon-job-1-3
+spec:
+  activeDeadlineSeconds: 600
+  parallelism: 5
+  template:
+    spec:
+      container:
+      - name: porygon
+        image: porygon:latest
+        command: ["sh", "-c", "sleep 1200 && python /app/script.py --url-index 0"]
+        envFrom:
+        - configMapRef:
+            name: shared-env-vars
+        restartPolicy: Never
+---
+
+# Level 2 1
+apiVersion: batch/v1
+kind: Job
+metadata: 
+  name: porygon-job-2-1
+spec:
+  activeDeadlineSeconds: 600
+  parallelism: 5
+  template:
+    spec:
+      container:
+      - name: porygon
+        image: porygon:latest
+        command: ["sh", "-c", "sleep 1800 && python /app script.py --url-index 1"]
+        envFrom:
+        - configMapRef:
+            name: shared-env-vars
+        restartPolicy: Never
+---
+
+# Level 2 2
+apiVersion: batch/v1
+kind: Job
+metadata: 
+  name: porygon-job-1-2
+spec:
+  activeDeadlineSeconds: 600
+  parallelism: 5
+  template:
+    spec:
+      container:
+      - name: porygon
+        image: porygon:latest
+        command: ["sh", "-c", "sleep 2400 && python /app script.py --url-index 1"]
+        envFrom:
+        - configMapRef:
+            name: shared-env-vars
+        restartPolicy: Never
+---
+
+# Level 2 3
+apiVersion: batch/v1
+kind: Job
+metadata: 
+  name: porygon-job-1-2
+spec:
+  activeDeadlineSeconds: 600
+  parallelism: 5
+  template:
+    spec:
+      container:
+      - name: porygon
+        image: porygon:latest
+        command: ["sh", "-c", "sleep 3000 && python /app script.py --url-index 1"]
+        envFrom:
+        - configMapRef:
+            name: shared-env-vars
+        restartPolicy: Never
+---
+
+
+

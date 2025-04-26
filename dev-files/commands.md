@@ -1,6 +1,4 @@
 ```bash
-kubectl
-```
 
 ```bash
 docker compose up -d
@@ -17,4 +15,5 @@ eval $(minikube docker-env)
 kubectl get pods --selector=job-name=step1-job
 kubectl exec -it <pod-name> -- /bin/bash # bash into a pod
 kubectl exec -it <pod-name> -c <container-name> -- /bin/bash # bash into multi container pod
+eval $(minikube docker-env -u) # undo minikube docker-env
 ```

@@ -15,4 +15,7 @@ sudo docker run -d --name=loki --network loki-grafana -p 3100:3100 -v "$(pwd)/lo
 # Run Grafana
 sudo docker run -d --name=grafana --network loki-grafana -v ./grafana-data:/var/lib/grafana -p 3000:3000 --link=loki  grafana/grafana-oss:latest
 
+logcli query '{job="your-job-name"}' --limit=10000 --output=raw > logs.txt
+
+
 ```

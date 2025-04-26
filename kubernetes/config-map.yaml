@@ -3,5 +3,7 @@ kind: ConfigMap
 metadata:
   name: shared-env-vars
 data:
-  SERVER_URL: "{{SERVER_URL}}"
-  LOKI_URL: "{{LOKI_URL}}"
+  SERVER_URL: "http://192.168.1.87:5000"
+  LOKI_URL: "http://192.168.1.87:3100"
+  SERVER_LABEL: "gin-server"
+
