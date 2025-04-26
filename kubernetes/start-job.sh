@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define your job settings as an array of "url_index parallelism"
-job=(
+jobs=(
   "1 0"
   "3 0"
   "5 0"
@@ -31,7 +31,7 @@ job=(
   "5 6"
   "7 6"
 )
-
+echo "Starting Script"
 # Loop through each job config
 for job in "${jobs[@]}"; do
   # Split into URL_INDEX and PARALLELISM
@@ -57,3 +57,5 @@ for job in "${jobs[@]}"; do
   # Wait a little before starting next job (optional)
   sleep 10
 done
+
+echo "Done"
