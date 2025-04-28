@@ -3,7 +3,7 @@ kind: Job
 metadata: 
   name: porygon-request-job
 spec:
-  activeDeadlineSeconds: 600
+  activeDeadlineSeconds: 180
   parallelism: {{PARALLELISM}}
   template:
     spec:
