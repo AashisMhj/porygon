@@ -7,6 +7,8 @@ import time
 import argparse
 import threading
 import queue
+import signal
+import sys
 from dotenv import load_dotenv
 from urls import endpoint_urls
 
@@ -15,43 +17,60 @@ load_dotenv()
 parser = argparse.ArgumentParser(description="Script to collect metric of url response")
 parser.add_argument("--url-index", help="The index of the url")
 LOKI_URL = os.environ.get('LOKI_URL')
-SERVER_LABEL = os.environ.get('SERVER_URL')
+SERVER_LABEL = os.environ.get('SERVER_LABEL')
 LOG_BUFFER_TIME = 5
 
 log_queue = queue.Queue()
+
+def flush_remaining_logs_and_exit(signum, frame):
+    print("\n[INFO] Flushing remaining logs before exit...")
+    entries = []
+    labels = {"job": SERVER_LABEL}
+    timestamp = str(int(time.time() * 1e9))
+
+    while not log_queue.empty():
+        entry, timestamp, entry_labels = log_queue.get()
+        entries.append(entry)
+        labels.update(entry_labels)  # optional merge if multiple sources
+
+    if entries:
+        send_log_to_loki(entries, timestamp, labels)
+
+    print("[INFO] Cleanup complete. Exiting.")
+    sys.exit(0)
+
 
 def log_worker():
     while True:
         time.sleep(LOG_BUFFER_TIME)
         entries = []
         while not log_queue.empty():
-            entry, labels = log_queue.get()
+            entry, timestamp, labels = log_queue.get()
             entries.append(entry)
 
         if entries:
-            send_log_to_loki(entry, labels)
+            send_log_to_loki(entries, timestamp, labels)
 
 threading.Thread(target=log_worker, daemon=True).start()
 
-def send_log_to_loki(entries, labels=None):
+def send_log_to_loki(entries, timestamp, labels=None):
     if labels is None:
-        labels = {"job": "url-monitor"}
+        labels = {"job": SERVER_LABEL}
+    payloadEntries = []
+    for entry in entries:
+        payloadEntries.append([timestamp, json.dumps(entry)])
+
     payload = {
         "streams": [
             {
-                "labels": "{" + ",".join([f'{k}="{v}"' for k, v in labels.items()]) + "}",
-                "entries": [{
-                    "ts": str(int(time.time() * 1e9)),
-                    "line": json.dumps(entries)
-                }]
+                "stream": labels,
+                "values": payloadEntries
             }
         ]
     }
-    headers = {
-        "Content-Type": "application/json"
-    }
+   
     try:
-        res = requests.post(f"{LOKI_URL}/loki/api/v1/push", headers=headers, data=json.dumps(payload))
+        res = requests.post(f"{LOKI_URL}/loki/api/v1/push", json=payload)
     except Exception as e:
         print(f"[ERROR] Failed to send log to loki: {e}")
 
@@ -79,15 +98,19 @@ def hit_url(url_obj, value=None):
                 "content_size": content_size
             }
             labels = {
-                "server": SERVER_LABEL
+                "job": SERVER_LABEL
             }
-            log_queue.put((data, labels))
+
+            log_queue.put((data, str(int(time.time() * 1e9)), labels))
     except Exception as e:
-        log_queue.put((str(e), {"type": f"{SERVER_LABEL}-error"}))
+        log_queue.put((str(e),  str(int(time.time() * 1e9)),{"job": f"{SERVER_LABEL}-error"}))
         error_message = f"[ERROR] {i} {type(e).__name__}: {str(e)}"
         print(error_message, url_obj['url'])
 
 if __name__ == "__main__":
+    signal.signal(signal.SIGINT, flush_remaining_logs_and_exit)
+    signal.signal(signal.SIGTERM, flush_remaining_logs_and_exit)
+
     args = parser.parse_args()
 
     if (args.url_index):
