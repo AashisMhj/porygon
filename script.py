@@ -18,20 +18,23 @@ parser = argparse.ArgumentParser(description="Script to collect metric of url re
 parser.add_argument("--url-index", help="The index of the url")
 LOKI_URL = os.environ.get('LOKI_URL')
 SERVER_LABEL = os.environ.get('SERVER_LABEL')
-LOG_BUFFER_TIME = 5
+LOG_BUFFER_TIME = 10; # 10 second
+ERROR_LOG_BUFFER_TIME = 30; # 30 second
 
 log_queue = queue.Queue()
+error_log_queue = queue.Queue()
+
+labels = {"job": SERVER_LABEL}
 
 def flush_remaining_logs_and_exit(signum, frame):
     print("\n[INFO] Flushing remaining logs before exit...")
     entries = []
-    labels = {"job": SERVER_LABEL}
+    
     timestamp = str(int(time.time() * 1e9))
 
     while not log_queue.empty():
-        entry, timestamp, entry_labels = log_queue.get()
-        entries.append(entry)
-        labels.update(entry_labels)  # optional merge if multiple sources
+        entry, timestamp = log_queue.get()
+        entries.append([timestamp, entry])
 
     if entries:
         send_log_to_loki(entries, timestamp, labels)
@@ -45,7 +48,7 @@ def log_worker():
         time.sleep(LOG_BUFFER_TIME)
         entries = []
         while not log_queue.empty():
-            entry, timestamp, labels = log_queue.get()
+            entry, timestamp = log_queue.get()
             entries.append(entry)
 
         if entries:
@@ -123,7 +126,8 @@ if __name__ == "__main__":
             time.sleep(1)
 
     else:
-        for url in endpoint_urls:
+        i = 0
+        while True:
             print(f"Starting url: {url['url']}")
             for i in range(10000):
                 hit_url(url, f"{i}")

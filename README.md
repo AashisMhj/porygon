@@ -1,8 +1,33 @@
 # Porygon
+![porygon](./images/porygon-image.png)
 
-This is python script to perform load testing on a api server. Written in python that perform continuous request to a server. The script then write the metrics related to response such as response time taken and other things on a csv file.
+Porygon is a python script to make continus request to you server and collect response metric. 
+The script makes request to a url and sends the logs to loki in the batch every 10 seconds.
 
-Using kubernetes deployment controller and cron jobs we perform gradual step load testing. 
-For on more detail how the flow please read this [documentation](./dev-files/incremental-flow.md).
+You can either run the script to make continous request to a single or multiple urls.
+Specify the urls that you would like to hit in the urls.py.
 
-This script for written specifically to perform load thing on [servers](./dev-files/performance-server.md) i created but you can modify the urls.py to add your urls
+```bash
+# make continus request to single url
+python script.py --url_index {{index_from_urls.py}}
+
+## to make continus request to all the urls in urls.py
+python script.py
+## this will make continuous request making 10000 request to each urls as a time
+```
+
+## Contents
+- dev-files:
+- kubernetes:
+- loki-grafana:
+
+## Setup
+You can run the application using docker, kubernetes or just script.
+
+**running script only**
+You run the script directly 
+
+**running using docker**
+
+
+**running using kubernetes**
