@@ -11,7 +11,7 @@ endpoint_urls = [
     },
     {
         "method": "GET",
-        "url": f"{SERVER_URL}/large-data",
+        "url": f"{SERVER_URL}/large-data?n=%n%",
     },
     {
         "method": "POST",
@@ -23,7 +23,7 @@ endpoint_urls = [
     },
     {
         "method": "GET",
-        "url": f"{SERVER_URL}/fibonacci"
+        "url": f"{SERVER_URL}/fibonacci?n=%n%"
     },
     {
         "method": "GET",

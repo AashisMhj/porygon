@@ -16,10 +16,12 @@ load_dotenv()
 
 parser = argparse.ArgumentParser(description="Script to collect metric of url response")
 parser.add_argument("--url-index", help="The index of the url")
+parser.add_argument('--hit_count', help="Count mode where the url is hit only specified times")
 LOKI_URL = os.environ.get('LOKI_URL')
 SERVER_LABEL = os.environ.get('SERVER_LABEL')
 LOG_BUFFER_TIME = 10; # 10 second
 ERROR_LOG_BUFFER_TIME = 30; # 30 second
+SLEEP_TIME = 0.5
 
 log_queue = queue.Queue()
 error_log_queue = queue.Queue()
@@ -37,7 +39,7 @@ def flush_remaining_logs_and_exit(signum, frame):
         entries.append([timestamp, entry])
 
     if entries:
-        send_log_to_loki(entries, timestamp, labels)
+        send_log_to_loki(entries, timestamp)
 
     print("[INFO] Cleanup complete. Exiting.")
     sys.exit(0)
@@ -77,10 +79,10 @@ def send_log_to_loki(entries, timestamp, labels=None):
     except Exception as e:
         print(f"[ERROR] Failed to send log to loki: {e}")
 
-def hit_url(url_obj, value=None):
+def hit_url(url_obj, value=''):
     try:
         start_time =time.time()
-        url = url_obj['url'].replace('{{s}}', value) if value else url_obj['url']
+        url = url_obj['url'].replace('%s%', value) if value else url_obj['url']
         payload = json.dumps(url_obj.get('data')).encode('utf-8') if url_obj.get('url') else None
         req = urllib.request.Request(url,headers={'Content-Type': 'application/json'}, method=url_obj['method'], data=payload)
 
@@ -98,13 +100,12 @@ def hit_url(url_obj, value=None):
                 "time_taken": time_taken,
                 "headers": headers,
                 "server": server,
-                "content_size": content_size
-            }
-            labels = {
-                "job": SERVER_LABEL
+                "content_size": content_size,
+                "url": url_obj['url'],
+                "value": value
             }
 
-            log_queue.put((data, str(int(time.time() * 1e9)), labels))
+            log_queue.put((data, str(int(time.time() * 1e9))))
     except Exception as e:
         log_queue.put((str(e),  str(int(time.time() * 1e9)),{"job": f"{SERVER_LABEL}-error"}))
         error_message = f"[ERROR] {i} {type(e).__name__}: {str(e)}"
@@ -116,21 +117,41 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if (args.url_index):
+    if (args.url_index and args.hit_count):
+        print('Url Index and Hit count mode')
+        url_index = int(args.url_index)
+        hit_count = int(args.hit_count)
+        if url_index > len(endpoint_urls) -1:
+            exit
+        print(f"Starting url: {endpoint_urls[url_index]} {url_index}")
+        for i in range(hit_count):
+            hit_url(endpoint_urls[url_index], str( i+1))
+            time.sleep(SLEEP_TIME)
+    elif (args.url_index):
+        print("Url Index mode")
         url_index = int(args.url_index)
         if url_index > len(endpoint_urls) -1:
             exit
         print(f"Starting url: {endpoint_urls[url_index]} {url_index}")
-        while True:
-            hit_url(endpoint_urls[url_index])
-            time.sleep(1)
-
-    else:
         i = 0
         while True:
+            i = i +1
+            hit_url(endpoint_urls[url_index], str(i))
+            time.sleep(SLEEP_TIME)
+    elif (args.hit_count):
+        hit_count = int(args.hit_count)
+        print(f"Hit count mode, count: {hit_count}")
+        for url in endpoint_urls:
             print(f"Starting url: {url['url']}")
-            for i in range(10000):
-                hit_url(url, f"{i}")
-                time.sleep(1)
+            for i in range(hit_count):
+                hit_url(url,str(i+1))
+                time.sleep(SLEEP_TIME)
+
+    else:
+        while True:
+            print("Infinite Mode")
+            for url in endpoint_urls:
+                    hit_url(url)
+                    time.sleep(SLEEP_TIME)
             
     

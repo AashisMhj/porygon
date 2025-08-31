@@ -1,0 +1,91 @@
+{
+    "id": null,
+    "uid": "go-server-dashboard",
+    "title": "Go Server Metrics",
+    "tags": ["loki", "go-server"],
+    "timezone": "browser",
+    "schemaVersion": 39,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "type": "timeseries",
+        "title": "Request Count by Status",
+        "id": 1,
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "targets": [
+          {
+            "expr": "count_over_time({job=\"go-server\"} | json | unwrap status [1m])",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "type": "timeseries",
+        "title": "Average Response Time (s)",
+        "id": 2,
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "targets": [
+          {
+            "expr": "avg_over_time({job=\"go-server\"} | json | unwrap time_taken [1m])",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "type": "timeseries",
+        "title": "Average Content Size",
+        "id": 3,
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "targets": [
+          {
+            "expr": "avg_over_time({job=\"go-server\"} | json | unwrap content_size [1m])",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "type": "stat",
+        "title": "Error Rate (5m)",
+        "id": 4,
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "targets": [
+          {
+            "expr": "count_over_time({job=\"go-server\"} | json | status != 200 [5m]) / count_over_time({job=\"go-server\"} [5m])",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "type": "table",
+        "title": "Raw Logs",
+        "id": 5,
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "targets": [
+          {
+            "expr": "{job=\"go-server\"} | json | line_format \"{{.status}} {{.time_taken}} {{.server}} {{.content_size}}\"",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showHeader": true
+        }
+      }
+    ]
+  }
+  
